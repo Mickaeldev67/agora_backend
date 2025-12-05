@@ -14,10 +14,6 @@ security:
             # (Note: no regex delimiters needed; Symfony adds `{}` automatically.)
             pattern: ^/(_profiler|_wdt|assets|build)/
             security: false
-        # main:
-        #     lazy: true
-        #     provider: users_in_memory
-
         login:
             pattern: ^/api/login
             stateless: true
@@ -32,6 +28,10 @@ security:
             stateless: true
             jwt: ~
 
+        # main:
+        #     lazy: true
+        #     provider: users_in_memory
+
             # activate different ways to authenticate
             # https://symfony.com/doc/current/security.html#firewalls-authentication
 
@@ -43,3 +43,6 @@ security:
     access_control:
         - { path: ^/api/login, roles: PUBLIC_ACCESS }
         - { path: ^/api/register, roles: PUBLIC_ACCESS }
+        - { path: ^/api/category, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
+
