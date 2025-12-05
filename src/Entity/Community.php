@@ -28,9 +28,16 @@ class Community
     #[ORM\ManyToMany(targetEntity: Topic::class, inversedBy: 'communities')]
     private Collection $topics;
 
+    /**
+     * @var Collection<int, User>
+     */
+    #[ORM\ManyToMany(targetEntity: User::class, mappedBy: 'Community')]
+    private Collection $users;
+
     public function __construct()
     {
         $this->topics = new ArrayCollection();
+        $this->users = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -82,6 +89,33 @@ class Community
     public function removeTopic(Topic $topic): static
     {
         $this->topics->removeElement($topic);
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, User>
+     */
+    public function getUsers(): Collection
+    {
+        return $this->users;
+    }
+
+    public function addUser(User $user): static
+    {
+        if (!$this->users->contains($user)) {
+            $this->users->add($user);
+            $user->addCommunity($this);
+        }
+
+        return $this;
+    }
+
+    public function removeUser(User $user): static
+    {
+        if ($this->users->removeElement($user)) {
+            $user->removeCommunity($this);
+        }
 
         return $this;
     }

@@ -78,6 +78,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 50)]
     private ?string $pseudo = null;
 
+    /**
+     * @var Collection<int, Community>
+     */
+    #[ORM\ManyToMany(targetEntity: Community::class, inversedBy: 'users')]
+    private Collection $Community;
+
     public function __construct()
     {
         $this->messages_sent = new ArrayCollection();
@@ -85,6 +91,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->threads = new ArrayCollection();
         $this->posts = new ArrayCollection();
         $this->reactions = new ArrayCollection();
+        $this->Community = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -326,6 +333,30 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setPseudo(string $pseudo): static
     {
         $this->pseudo = $pseudo;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Community>
+     */
+    public function getCommunity(): Collection
+    {
+        return $this->Community;
+    }
+
+    public function addCommunity(Community $community): static
+    {
+        if (!$this->Community->contains($community)) {
+            $this->Community->add($community);
+        }
+
+        return $this;
+    }
+
+    public function removeCommunity(Community $community): static
+    {
+        $this->Community->removeElement($community);
 
         return $this;
     }

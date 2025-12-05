@@ -30,7 +30,10 @@ final class CategoryController extends AbstractController
         $em->persist($category);
         $em->flush();
         return $this->json([
-            'message' => 'La catégorie '. $category->getName() . ' a été créée avec succès.',
+            'message' => sprintf(
+                'La catégorie %s a été créée avec succès.',
+                $category->getName()
+            ),
         ], Response::HTTP_CREATED);
     }
 }

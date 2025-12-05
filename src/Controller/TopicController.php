@@ -2,9 +2,15 @@
 
 namespace App\Controller;
 
+use App\Entity\Topic;
+use App\Repository\CategoryRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Serializer\SerializerInterface;
 
 final class TopicController extends AbstractController
 {
@@ -15,5 +21,39 @@ final class TopicController extends AbstractController
             'message' => 'Welcome to your new controller!',
             'path' => 'src/Controller/TopicController.php',
         ]);
+    }
+
+    #[Route('api/topic/create', name: 'app_topic_create', methods: ['POST'])]
+    public function create(Request $request, EntityManagerInterface $em, SerializerInterface $serializer, CategoryRepository $cRepo): JsonResponse
+    {
+        // 1. On décode en tableau (pas en entity)
+        $data = json_decode($request->getContent(), true);
+
+        if (!isset($data['category'])) {
+            return $this->json(['error' => 'Missing category ID'], 400);
+        }
+
+        // 2. Récupération de la catégorie depuis la base
+        $category = $cRepo->find($data['category']);
+
+        if (!$category) {
+            return $this->json(['error' => 'Category not found'], 404);
+        }
+
+        // 3. Création du topic
+        $topic = new Topic();
+        $topic->setName($data['name'] ?? null);
+        $topic->setCategory($category);
+
+        $em->persist($topic);
+        $em->flush();
+
+        return $this->json([
+            'message' => sprintf(
+                'Le topic %s a été créé avec succès pour la catégorie %s.',
+                $topic->getName(),
+                $category->getName()
+            )
+        ], Response::HTTP_CREATED);
     }
 }
