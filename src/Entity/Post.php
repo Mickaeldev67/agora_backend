@@ -15,23 +15,25 @@ class Post
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['post'])]
     private ?int $id = null;
 
     
     #[ORM\Column(type: Types::TEXT, nullable: true)]
-    #[Groups(['thread'])]
+    #[Groups(['thread','post'])]
     private ?string $content = null;
 
     #[ORM\Column]
-    #[Groups(['thread'])]
+    #[Groups(['thread','post'])]
     private ?\DateTimeImmutable $created_at = null;
 
     #[ORM\Column(nullable: true)]
-    #[Groups(['thread'])]
+    #[Groups(['thread','post'])]
     private ?\DateTime $updated_at = null;
 
     #[ORM\ManyToOne(inversedBy: 'posts')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['post'])]
     private ?User $user = null;
 
     #[ORM\ManyToOne(inversedBy: 'posts')]

@@ -24,17 +24,17 @@ final class TopicController extends AbstractController
     }
 
     #[Route('api/topic/create', name: 'app_topic_create', methods: ['POST'])]
-    public function create(Request $request, EntityManagerInterface $em, SerializerInterface $serializer, CategoryRepository $cRepo): JsonResponse
+    public function create(Request $request, EntityManagerInterface $em, CategoryRepository $repo): JsonResponse
     {
-        // 1. On décode en tableau (pas en entity)
+        // 1. On décode en tableau
         $data = json_decode($request->getContent(), true);
 
-        if (!isset($data['category'])) {
+        if (!isset($data['category_id'])) {
             return $this->json(['error' => 'Missing category ID'], 400);
         }
 
         // 2. Récupération de la catégorie depuis la base
-        $category = $cRepo->find($data['category']);
+        $category = $repo->find($data['category_id']);
 
         if (!$category) {
             return $this->json(['error' => 'Category not found'], 404);

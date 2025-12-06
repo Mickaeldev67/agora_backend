@@ -55,4 +55,31 @@ final class UserController extends AbstractController
             'user' => $user,
         ], Response::HTTP_CREATED);
     }
+
+    #[Route('/api/user/communities', name: 'app_user_communities', methods: ['GET'])]
+    # $user = $this->getUser();
+    public function getCommunitys(): JsonResponse
+    {
+        $user = $this->getUser();
+        if (!$user) {
+            return $this->json(
+                [
+                    'error' => 'Unauthorized'
+                ],
+                Response::HTTP_UNAUTHORIZED
+            );
+        }
+
+        $communities = $user->getCommunity();
+
+        $data = $communities->map(fn($community) => [
+            'id' => $community->getId(),
+            'name' => $community->getName(),
+            'description' => $community->getDescription(),
+        ])->toArray();
+
+        return $this->json([
+            'data' => $data
+        ], Response::HTTP_OK);
+    }
 }

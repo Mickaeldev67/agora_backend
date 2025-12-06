@@ -76,7 +76,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: Reaction::class, mappedBy: 'user', orphanRemoval: true)]
     private Collection $reactions;
 
-    #[Groups(['thread'])]
+    #[Groups(['thread', 'post'])]
     #[ORM\Column(length: 50)]
     private ?string $pseudo = null;
 

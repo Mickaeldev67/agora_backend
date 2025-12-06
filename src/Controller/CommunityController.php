@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Community;
+use App\Repository\CommunityRepository;
 use App\Repository\TopicRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -62,5 +63,32 @@ final class CommunityController extends AbstractController
                 $name
             ),
         ]);
+    }
+
+    #[Route('/api/community/{id}/threads', name: 'app_community_threads', methods: ['GET'])]
+    public function getThreads(int $id, CommunityRepository $repo): JsonResponse
+    {
+        $community = $repo->find($id);
+
+        if (!$community) {
+            return $this->json([
+                'error' => "Communauté avec l'ID $id introuvable"
+            ], Response::HTTP_NOT_FOUND);
+        }
+
+        $threads = $community->getThreads();
+
+        $data = $threads->map(fn($thread) => [
+            'id' => $thread->getId(),
+            'title' => $thread->getTitle(),
+            'created_at' => $thread->getCreatedAt()?->format('Y-m-d H:i:s'),
+            'content' => $thread->getContent(),
+            'user' => [
+                'id' => $thread->getUser()?->getId(),
+                'pseudo' => $thread->getUser()?->getPseudo(),
+            ],
+        ])->toArray();
+
+        return $this->json($data);
     }
 }
