@@ -62,7 +62,7 @@ class Topic
     {
         if (!$this->communities->contains($community)) {
             $this->communities->add($community);
-            $community->addTopic($this);
+            // $community->addTopic($this);
         }
 
         return $this;

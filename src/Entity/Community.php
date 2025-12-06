@@ -25,7 +25,8 @@ class Community
     /**
      * @var Collection<int, Topic>
      */
-    #[ORM\ManyToMany(targetEntity: Topic::class, inversedBy: 'communities')]
+    #[ORM\ManyToMany(targetEntity: Topic::class, inversedBy: 'communities', cascade: ['persist'])]
+    #[ORM\JoinTable(name: 'community_topic')]
     private Collection $topics;
 
     /**
@@ -34,10 +35,17 @@ class Community
     #[ORM\ManyToMany(targetEntity: User::class, mappedBy: 'Community')]
     private Collection $users;
 
+    /**
+     * @var Collection<int, Thread>
+     */
+    #[ORM\OneToMany(targetEntity: Thread::class, mappedBy: 'community', orphanRemoval: true)]
+    private Collection $threads;
+
     public function __construct()
     {
         $this->topics = new ArrayCollection();
         $this->users = new ArrayCollection();
+        $this->threads = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -81,6 +89,7 @@ class Community
     {
         if (!$this->topics->contains($topic)) {
             $this->topics->add($topic);
+            // $topic->addCommunity($this);
         }
 
         return $this;
@@ -115,6 +124,36 @@ class Community
     {
         if ($this->users->removeElement($user)) {
             $user->removeCommunity($this);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Thread>
+     */
+    public function getThreads(): Collection
+    {
+        return $this->threads;
+    }
+
+    public function addThread(Thread $thread): static
+    {
+        if (!$this->threads->contains($thread)) {
+            $this->threads->add($thread);
+            $thread->setCommunity($this);
+        }
+
+        return $this;
+    }
+
+    public function removeThread(Thread $thread): static
+    {
+        if ($this->threads->removeElement($thread)) {
+            // set the owning side to null (unless already changed)
+            if ($thread->getCommunity() === $this) {
+                $thread->setCommunity(null);
+            }
         }
 
         return $this;

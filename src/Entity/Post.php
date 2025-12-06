@@ -7,6 +7,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ORM\Entity(repositoryClass: PostRepository::class)]
 class Post
@@ -16,13 +17,17 @@ class Post
     #[ORM\Column]
     private ?int $id = null;
 
+    
     #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[Groups(['thread'])]
     private ?string $content = null;
 
     #[ORM\Column]
+    #[Groups(['thread'])]
     private ?\DateTimeImmutable $created_at = null;
 
     #[ORM\Column(nullable: true)]
+    #[Groups(['thread'])]
     private ?\DateTime $updated_at = null;
 
     #[ORM\ManyToOne(inversedBy: 'posts')]

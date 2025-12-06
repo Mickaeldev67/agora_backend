@@ -7,6 +7,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ORM\Entity(repositoryClass: ThreadRepository::class)]
 class Thread
@@ -14,20 +15,26 @@ class Thread
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['thread'])]
     private ?int $id = null;
 
+    #[Groups(['thread'])]
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $title = null;
 
+    #[Groups(['thread'])]
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $content = null;
 
+    #[Groups(['thread'])]
     #[ORM\Column]
     private ?\DateTimeImmutable $created_at = null;
 
-    #[ORM\Column]
+    #[Groups(['thread'])]
+    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     private ?\DateTime $updated_at = null;
 
+    #[Groups(['thread'])]
     #[ORM\ManyToOne(inversedBy: 'threads')]
     #[ORM\JoinColumn(nullable: false)]
     private ?User $user = null;
@@ -35,14 +42,20 @@ class Thread
     /**
      * @var Collection<int, Post>
      */
+    #[Groups(['thread'])]
     #[ORM\OneToMany(targetEntity: Post::class, mappedBy: 'thread', orphanRemoval: true)]
     private Collection $posts;
 
     /**
      * @var Collection<int, Reaction>
      */
+    #[Groups(['thread'])]
     #[ORM\OneToMany(targetEntity: Reaction::class, mappedBy: 'thread')]
     private Collection $reactions;
+
+    #[ORM\ManyToOne(inversedBy: 'threads')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Community $community = null;
 
     public function __construct()
     {
@@ -171,6 +184,18 @@ class Thread
                 $reaction->setThread(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getCommunity(): ?Community
+    {
+        return $this->community;
+    }
+
+    public function setCommunity(?Community $community): static
+    {
+        $this->community = $community;
 
         return $this;
     }
