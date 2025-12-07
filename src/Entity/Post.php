@@ -15,7 +15,7 @@ class Post
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['post'])]
+    #[Groups(['post', 'reaction'])]
     private ?int $id = null;
 
     
@@ -44,6 +44,7 @@ class Post
      * @var Collection<int, Reaction>
      */
     #[ORM\OneToMany(targetEntity: Reaction::class, mappedBy: 'post')]
+    #[Groups(['post'])]
     private Collection $reactions;
 
     public function __construct()
@@ -144,5 +145,12 @@ class Post
         }
 
         return $this;
+    }
+
+    public function total(): int
+    {
+        $likes = $this->reactions->filter(fn($reaction) => $reaction->isLiked())->count();
+        $dislikes = $this->reactions->filter(fn($reaction) => $reaction->isDisliked())->count();
+        return $likes - $dislikes;
     }
 }

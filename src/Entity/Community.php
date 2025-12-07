@@ -25,15 +25,9 @@ class Community
     /**
      * @var Collection<int, Topic>
      */
-    #[ORM\ManyToMany(targetEntity: Topic::class, inversedBy: 'communities', cascade: ['persist'])]
+    #[ORM\ManyToMany(targetEntity: Topic::class, inversedBy: 'communities', cascade: ['persist', 'remove'])]
     #[ORM\JoinTable(name: 'community_topic')]
     private Collection $topics;
-
-    /**
-     * @var Collection<int, User>
-     */
-    #[ORM\ManyToMany(targetEntity: User::class, mappedBy: 'Community')]
-    private Collection $users;
 
     /**
      * @var Collection<int, Thread>
@@ -41,11 +35,17 @@ class Community
     #[ORM\OneToMany(targetEntity: Thread::class, mappedBy: 'community', orphanRemoval: true)]
     private Collection $threads;
 
+    /**
+     * @var Collection<int, UserCommunity>
+     */
+    #[ORM\OneToMany(targetEntity: UserCommunity::class, mappedBy: 'community', orphanRemoval: true)]
+    private Collection $users;
+
     public function __construct()
     {
         $this->topics = new ArrayCollection();
-        $this->users = new ArrayCollection();
         $this->threads = new ArrayCollection();
+        $this->users = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -89,7 +89,7 @@ class Community
     {
         if (!$this->topics->contains($topic)) {
             $this->topics->add($topic);
-            // $topic->addCommunity($this);
+            $topic->addCommunity($this);
         }
 
         return $this;
@@ -97,33 +97,8 @@ class Community
 
     public function removeTopic(Topic $topic): static
     {
-        $this->topics->removeElement($topic);
-
-        return $this;
-    }
-
-    /**
-     * @return Collection<int, User>
-     */
-    public function getUsers(): Collection
-    {
-        return $this->users;
-    }
-
-    public function addUser(User $user): static
-    {
-        if (!$this->users->contains($user)) {
-            $this->users->add($user);
-            $user->addCommunity($this);
-        }
-
-        return $this;
-    }
-
-    public function removeUser(User $user): static
-    {
-        if ($this->users->removeElement($user)) {
-            $user->removeCommunity($this);
+        if ($this->topics->removeElement($topic)) {
+            $topic->removeCommunity($this);
         }
 
         return $this;
@@ -153,6 +128,36 @@ class Community
             // set the owning side to null (unless already changed)
             if ($thread->getCommunity() === $this) {
                 $thread->setCommunity(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, UserCommunity>
+     */
+    public function getUsers(): Collection
+    {
+        return $this->users;
+    }
+
+    public function addUser(UserCommunity $user): static
+    {
+        if (!$this->users->contains($user)) {
+            $this->users->add($user);
+            $user->setCommunity($this);
+        }
+
+        return $this;
+    }
+
+    public function removeUser(UserCommunity $user): static
+    {
+        if ($this->users->removeElement($user)) {
+            // set the owning side to null (unless already changed)
+            if ($user->getCommunity() === $this) {
+                $user->setCommunity(null);
             }
         }
 

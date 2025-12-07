@@ -65,7 +65,6 @@ class Topic
     {
         if (!$this->communities->contains($community)) {
             $this->communities->add($community);
-            // $community->addTopic($this);
         }
 
         return $this;
@@ -73,9 +72,7 @@ class Topic
 
     public function removeCommunity(Community $community): static
     {
-        if ($this->communities->removeElement($community)) {
-            $community->removeTopic($this);
-        }
+        $this->communities->removeElement($community);
 
         return $this;
     }

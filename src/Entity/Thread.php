@@ -15,7 +15,7 @@ class Thread
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['thread'])]
+    #[Groups(['thread', 'reaction'])]
     private ?int $id = null;
 
     #[Groups(['thread'])]
@@ -198,5 +198,12 @@ class Thread
         $this->community = $community;
 
         return $this;
+    }
+
+    public function total(): int
+    {
+        $likes = $this->reactions->filter(fn($reaction) => $reaction->isLiked())->count();
+        $dislikes = $this->reactions->filter(fn($reaction) => $reaction->isDisliked())->count();
+        return $likes - $dislikes;
     }
 }

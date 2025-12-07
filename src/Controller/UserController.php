@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\User;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -57,7 +58,6 @@ final class UserController extends AbstractController
     }
 
     #[Route('/api/user/communities', name: 'app_user_communities', methods: ['GET'])]
-    # $user = $this->getUser();
     public function getCommunitys(): JsonResponse
     {
         $user = $this->getUser();
@@ -70,9 +70,16 @@ final class UserController extends AbstractController
             );
         }
 
-        $communities = $user->getCommunity();
+        $userCommunities = $user->getUserCommunities();
+        $communities = [];
 
-        $data = $communities->map(fn($community) => [
+        foreach ($userCommunities as $community) {
+            if ($community->isFavorite()) {
+                $communities[] = $community->getCommunity();
+            }
+        }
+
+        $data = (new ArrayCollection($communities))->map(fn($community) => [
             'id' => $community->getId(),
             'name' => $community->getName(),
             'description' => $community->getDescription(),

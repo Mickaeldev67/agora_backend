@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use App\Repository\ReactionRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ORM\Entity(repositoryClass: ReactionRepository::class)]
 class Reaction
@@ -14,15 +15,19 @@ class Reaction
     private ?int $id = null;
 
     #[ORM\Column]
+    #[Groups(['reaction', 'post', 'thread'])]
     private ?bool $is_liked = null;
 
     #[ORM\Column]
+    #[Groups(['reaction', 'post', 'thread'])]
     private ?bool $is_disliked = null;
 
     #[ORM\ManyToOne(inversedBy: 'reactions')]
+    #[Groups(['reaction', 'post'])]
     private ?Post $post = null;
 
     #[ORM\ManyToOne(inversedBy: 'reactions')]
+    #[Groups(['reaction, thread'])]
     private ?Thread $thread = null;
 
     #[ORM\ManyToOne(inversedBy: 'reactions')]

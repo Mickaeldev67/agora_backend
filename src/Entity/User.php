@@ -81,10 +81,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?string $pseudo = null;
 
     /**
-     * @var Collection<int, Community>
+     * @var Collection<int, UserCommunity>
      */
-    #[ORM\ManyToMany(targetEntity: Community::class, inversedBy: 'users')]
-    private Collection $Community;
+    #[ORM\OneToMany(targetEntity: UserCommunity::class, mappedBy: 'user', orphanRemoval: true)]
+    private Collection $userCommunities;
 
     public function __construct()
     {
@@ -93,7 +93,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->threads = new ArrayCollection();
         $this->posts = new ArrayCollection();
         $this->reactions = new ArrayCollection();
-        $this->Community = new ArrayCollection();
+        $this->userCommunities = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -340,25 +340,31 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     }
 
     /**
-     * @return Collection<int, Community>
+     * @return Collection<int, UserCommunity>
      */
-    public function getCommunity(): Collection
+    public function getUserCommunities(): Collection
     {
-        return $this->Community;
+        return $this->userCommunities;
     }
 
-    public function addCommunity(Community $community): static
+    public function addUserCommunity(UserCommunity $userCommunity): static
     {
-        if (!$this->Community->contains($community)) {
-            $this->Community->add($community);
+        if (!$this->userCommunities->contains($userCommunity)) {
+            $this->userCommunities->add($userCommunity);
+            $userCommunity->setUser($this);
         }
 
         return $this;
     }
 
-    public function removeCommunity(Community $community): static
+    public function removeUserCommunity(UserCommunity $userCommunity): static
     {
-        $this->Community->removeElement($community);
+        if ($this->userCommunities->removeElement($userCommunity)) {
+            // set the owning side to null (unless already changed)
+            if ($userCommunity->getUser() === $this) {
+                $userCommunity->setUser(null);
+            }
+        }
 
         return $this;
     }

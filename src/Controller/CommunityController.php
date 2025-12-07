@@ -3,8 +3,10 @@
 namespace App\Controller;
 
 use App\Entity\Community;
+use App\Entity\UserCommunity;
 use App\Repository\CommunityRepository;
 use App\Repository\TopicRepository;
+use App\Repository\UserCommunityRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -23,7 +25,7 @@ final class CommunityController extends AbstractController
         ]);
     }
 
-    #[Route('api/community/create', name: 'app_community_create', methods: ['POST'])]
+    #[Route('/api/community/create', name: 'app_community_create', methods: ['POST'])]
     public function create(Request $request, EntityManagerInterface $em, TopicRepository $repo): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
@@ -54,7 +56,12 @@ final class CommunityController extends AbstractController
             $em->persist($community);
             $em->flush();
         } catch (\Exception $e) {
-            return $this->json(['error' => 'An error occurred: ' . $e->getMessage()], 500);
+            return $this->json(
+                [
+                    'error' => 'An error occurred: ' . $e->getMessage()
+                ],
+                Response::HTTP_INTERNAL_SERVER_ERROR
+            );
         }
 
         return $this->json([
@@ -72,7 +79,7 @@ final class CommunityController extends AbstractController
 
         if (!$community) {
             return $this->json([
-                'error' => "Communauté avec l'ID $id introuvable"
+                'error' => sprintf("Communauté avec l'ID %s introuvable", $id)
             ], Response::HTTP_NOT_FOUND);
         }
 
@@ -87,8 +94,88 @@ final class CommunityController extends AbstractController
                 'id' => $thread->getUser()?->getId(),
                 'pseudo' => $thread->getUser()?->getPseudo(),
             ],
+            'Reactions' => [
+                'likes' => $thread->getReactions()->filter(fn($reaction) => $reaction->isLiked())->count(),
+                'dislikes' => $thread->getReactions()->filter(fn($reaction) => $reaction->isDisliked())->count(),
+                'total' => $thread->total(),
+            ],
         ])->toArray();
 
         return $this->json($data);
+    }
+
+    #[Route('/api/community/{id}/add-favorite', name: 'app_community_add_favorite', methods: ['POST'])]
+    public function addfavoriteCommunity(Request $request, EntityManagerInterface $em, CommunityRepository $repo, int $id): JsonResponse
+    {
+        // Implementation for adding a favorite community would go here.
+        $request = json_decode($request->getContent(), true);
+        $user = $this->getUser();
+        $communityId = $request['community_id'] ?? null;
+        if (!$user) {
+            return $this->json(
+                [
+                    'error' => 'Unauthorized'
+                ],
+                Response::HTTP_UNAUTHORIZED
+            );
+        }
+
+        $community = $repo->find($communityId);
+        if (!$community) {
+            return $this->json(
+                [
+                    'error' => 'Community not found'
+                ],
+                Response::HTTP_BAD_REQUEST
+            );
+        }
+
+        $userCommunity = new UserCommunity();
+        $userCommunity->setUser($user);
+        $userCommunity->setCommunity($community);
+        $userCommunity->setIsFavorite(true);
+        $em->persist($userCommunity);
+        $em->flush();
+
+        return $this->json([
+            'message' => 'La communauté a été ajoutée aux favoris avec succès.',
+        ]);
+    }
+
+    #[Route('/api/community/{id}/delete-favorite', name: 'app_community_delete_favorite', methods: ['DELETE'])]
+    public function deleteFavoriteCommunity(int $id, EntityManagerInterface $em, UserCommunityRepository $repo): JsonResponse
+    {
+        // Implementation for deleting a favorite community would go here.
+        $user = $this->getUser();
+        if (!$user) {
+            return $this->json(
+                [
+                    'error' => 'Unauthorized'
+                ],
+                Response::HTTP_UNAUTHORIZED
+            );
+        }
+
+        $userCommunity = $repo->findOneBy([
+            'user' => $user,
+            'community' => $id,
+            'isFavorite' => true,
+        ]);
+
+        if (!$userCommunity) {
+            return $this->json(
+                [
+                    'error' => 'Erreur lors de la suppression de la communauté des favoris'
+                ],
+                Response::HTTP_BAD_REQUEST
+            );
+        }
+
+        $em->remove($userCommunity);
+        $em->flush();
+
+        return $this->json([
+            'message' => 'La communauté a été supprimée des favoris avec succès.',
+        ]);
     }
 }

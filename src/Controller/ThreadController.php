@@ -83,7 +83,19 @@ final class ThreadController extends AbstractController
             );
         }
         $posts = $thread->getPosts();
-        $data = $serializer->serialize($posts, 'json', ['groups' => 'post']);
-        return new JsonResponse($data, Response::HTTP_OK, [], true);
+
+        $data = $posts
+    ->map(fn($post) => [
+        'id' => $post->getId(),
+        'content' => $post->getContent(),
+        'pseudo' => $post->getUser()?->getPseudo(),
+        'total_reactions' => $post->total(),
+        'created_at' => $post->getCreatedAt()?->format('Y-m-d H:i:s'),
+        'updated_at' => $post->getUpdatedAt()?->format('Y-m-d H:i:s'),
+    ])
+    ->toArray();
+        return $this->json([
+            'data' => $data,
+        ], Response::HTTP_OK, [], ['groups' => 'post']);
     }
 }
