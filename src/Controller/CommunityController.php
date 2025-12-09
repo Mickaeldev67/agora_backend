@@ -37,6 +37,7 @@ final class CommunityController extends AbstractController
         $community->setDescription($description);
         try {
             foreach ($topics as $topicId) {
+                
                 $topic = $repo->find($topicId);
                 if (!$topic) {
                     return $this->json(
@@ -51,8 +52,7 @@ final class CommunityController extends AbstractController
 
             // Here you would create the Community entity, set its properties,
             // associate the topics, persist it and flush.
-
-
+            
             $em->persist($community);
             $em->flush();
         } catch (\Exception $e) {
@@ -97,7 +97,7 @@ final class CommunityController extends AbstractController
             'Reactions' => [
                 'likes' => $thread->getReactions()->filter(fn($reaction) => $reaction->isLiked())->count(),
                 'dislikes' => $thread->getReactions()->filter(fn($reaction) => $reaction->isDisliked())->count(),
-                'total' => $thread->total(),
+                'total' => $thread->getTotalReaction(),
             ],
         ])->toArray();
 

@@ -200,7 +200,7 @@ class Thread
         return $this;
     }
 
-    public function total(): int
+    public function getTotalReaction(): int
     {
         $likes = $this->reactions->filter(fn($reaction) => $reaction->isLiked())->count();
         $dislikes = $this->reactions->filter(fn($reaction) => $reaction->isDisliked())->count();

@@ -23,11 +23,11 @@ class Reaction
     private ?bool $is_disliked = null;
 
     #[ORM\ManyToOne(inversedBy: 'reactions')]
-    #[Groups(['reaction', 'post'])]
+    #[Groups(['reaction'])]
     private ?Post $post = null;
 
     #[ORM\ManyToOne(inversedBy: 'reactions')]
-    #[Groups(['reaction, thread'])]
+    #[Groups(['reaction'])]
     private ?Thread $thread = null;
 
     #[ORM\ManyToOne(inversedBy: 'reactions')]

@@ -72,7 +72,9 @@ class Topic
 
     public function removeCommunity(Community $community): static
     {
-        $this->communities->removeElement($community);
+        if ($this->communities->removeElement($community)) {
+            $community->removeTopic($this);
+        }
 
         return $this;
     }
