@@ -179,13 +179,16 @@ final class ThreadController extends AbstractController
             'title' => $thread->getTitle(),
             'content' => $thread->getContent(),
             'pseudo' => $thread->getUser()?->getPseudo(),
-            'nb_vote' => $thread->getTotalReaction(),
-            'created_at' => $thread->getCreatedAt()?->format('Y-m-d H:i:s'),
+            'nbVote' => $thread->getTotalReaction(),
+            'createdAt' => $thread->getCreatedAt()?->format('Y-m-d H:i:s'),
         ], $threads);
 
-        return $this->json([
-            'data' => $data,
-        ], Response::HTTP_OK, [], ['groups' => 'thread']);
+        return $this->json(
+            $data, 
+            Response::HTTP_OK, 
+            [], 
+            ['groups' => 'thread']
+        );
     }
 
     #[Route('/api/thread/{id}/posts', name: 'app_thread_posts', methods: ['GET'])]
