@@ -12,19 +12,9 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Serializer\SerializerInterface;
-use Symfony\Component\Validator\Constraints\Json;
 
 final class ThreadController extends AbstractController
 {
-    #[Route('/thread', name: 'app_thread')]
-    public function index(): JsonResponse
-    {
-        return $this->json([
-            'message' => 'Welcome to your new controller!',
-            'path' => 'src/Controller/ThreadController.php',
-        ]);
-    }
-
     #[Route('/api/thread/create', name: 'app_thread_create', methods: ['POST'])]
     public function create(EntityManagerInterface $em, Request $request, CommunityRepository $repo): JsonResponse
     {
@@ -38,7 +28,7 @@ final class ThreadController extends AbstractController
         if (!$user) {
             return $this->json(
                 [
-                    'error' => 'Unauthorized'
+                    'error' => 'Non autorisé'
                 ],
                 Response::HTTP_UNAUTHORIZED
             );
@@ -49,7 +39,7 @@ final class ThreadController extends AbstractController
             if (!$community) {
                 return $this->json(
                     [
-                        'error' => 'Community not found'
+                        'error' => 'Communauté non trouvé !'
                     ],
                     Response::HTTP_BAD_REQUEST
                 );
@@ -58,7 +48,7 @@ final class ThreadController extends AbstractController
         } catch (\Exception $e) {
             return $this->json(
                 [
-                    'error' => 'An error occurred: ' . $e->getMessage()
+                    'error' => 'Une erreur est survenu : ' . $e->getMessage()
                 ],
                 Response::HTTP_INTERNAL_SERVER_ERROR
             );
@@ -66,7 +56,7 @@ final class ThreadController extends AbstractController
         $em->persist($thread);
         $em->flush();
         return $this->json([
-            'message' => 'Thread created successfully!',
+            'message' => 'Thread créé avec succès !',
             'thread' => $thread,
         ], Response::HTTP_CREATED, [], ['groups' => 'thread']);
     }
@@ -80,7 +70,7 @@ final class ThreadController extends AbstractController
         if (!$thread) {
             return $this->json(
                 [
-                    'error' => 'Thread not found'
+                    'error' => 'Thread non trouvé !'
                 ],
                 Response::HTTP_NOT_FOUND
             );
@@ -98,7 +88,7 @@ final class ThreadController extends AbstractController
         if (!$user) {
             return $this->json(
                 [
-                    'error' => 'Unauthorized'
+                    'error' => 'Non autorisé !'
                 ],
                 Response::HTTP_UNAUTHORIZED
             );
@@ -107,7 +97,7 @@ final class ThreadController extends AbstractController
         if ($thread->getUser()->getId() !== $user->getId()) {
             return $this->json(
                 [
-                    'error' => 'You are not the owner of this thread'
+                    'error' => "Vous n'êtes pas le propriétaire de ce thread !"
                 ],
                 Response::HTTP_FORBIDDEN
             );
@@ -129,7 +119,7 @@ final class ThreadController extends AbstractController
         if (!$thread) {
             return $this->json(
                 [
-                    'error' => 'Thread not found'
+                    'error' => 'Thread non trouvé.'
                 ],
                 Response::HTTP_NOT_FOUND
             );
@@ -138,7 +128,7 @@ final class ThreadController extends AbstractController
         if (!$user) {
             return $this->json(
                 [
-                    'error' => 'Unauthorized'
+                    'error' => 'Action non autorisé !'
                 ],
                 Response::HTTP_UNAUTHORIZED
             );
@@ -157,7 +147,7 @@ final class ThreadController extends AbstractController
         $em->flush();
 
         return $this->json([
-            'message' => 'Thread deleted successfully!',
+            'message' => 'Le thread a bien été supprimé !',
         ]);
     }
 
@@ -180,7 +170,9 @@ final class ThreadController extends AbstractController
             'content' => $thread->getContent(),
             'pseudo' => $thread->getUser()?->getPseudo(),
             'nbVote' => $thread->getTotalReaction(),
-            'createdAt' => $thread->getCreatedAt()?->format('Y-m-d H:i:s'),
+            'createdAt' => $thread->getCreatedAt()?->format('d m Y'),
+            'community' => $thread->getCommunity()->getName(),
+            'nbPost' => $thread->getPosts()->count()
         ], $threads);
 
         return $this->json(
@@ -198,7 +190,7 @@ final class ThreadController extends AbstractController
         if (!$thread) {
             return $this->json(
                 [
-                    'error' => 'Thread not found'
+                    'error' => 'Thread non trouvé.'
                 ],
                 Response::HTTP_NOT_FOUND
             );
