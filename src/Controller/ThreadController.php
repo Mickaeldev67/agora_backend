@@ -101,7 +101,7 @@ final class ThreadController extends AbstractController
                 ],
                 Response::HTTP_FORBIDDEN
             );
-        }   
+        }
 
         $em->persist($thread);
         $em->flush();
@@ -170,20 +170,21 @@ final class ThreadController extends AbstractController
             'content' => $thread->getContent(),
             'pseudo' => $thread->getUser()?->getPseudo(),
             'nbVote' => $thread->getTotalReaction(),
-            'createdAt' => $thread->getCreatedAt()?->format('d m Y'),
+            'createdAt' => $thread->getCreatedAt(),
+            'updatedAt' => $thread->getUpdatedAt(),
             'community' => $thread->getCommunity()->getName(),
-            'nbPost' => $thread->getPosts()->count()
+            'nbPost' => $thread->getPosts()->count() ?? 0,
         ], $threads);
 
         return $this->json(
-            $data, 
-            Response::HTTP_OK, 
-            [], 
+            $data,
+            Response::HTTP_OK,
+            [],
             ['groups' => 'thread']
         );
     }
 
-    #[Route('/api/thread/{id}/posts', name: 'app_thread_posts', methods: ['GET'])]
+    #[Route('/thread/{id}/posts', name: 'app_thread_posts', methods: ['GET'])]
     public function getPosts(int $id, ThreadRepository $repo, SerializerInterface $serializer): JsonResponse
     {
         $thread = $repo->find($id);
@@ -196,20 +197,33 @@ final class ThreadController extends AbstractController
             );
         }
         $posts = $thread->getPosts();
-
         $data = $posts
-    ->map(fn($post) => [
-        'id' => $post->getId(),
-        'content' => $post->getContent(),
-        'pseudo' => $post->getUser()?->getPseudo(),
-        'nb_vote' => $post->getTotalReaction(),
-        'nb_post' => $post->getThread()?->getPosts()->count(),
-        'created_at' => $post->getCreatedAt()?->format('Y-m-d H:i:s'),
-        'updated_at' => $post->getUpdatedAt()?->format('Y-m-d H:i:s'),
-    ])
-    ->toArray();
-        return $this->json([
-            'data' => $data,
-        ], Response::HTTP_OK, [], ['groups' => 'post']);
+            ->map(fn($post) => [
+                'id' => $post->getId(),
+                'content' => $post->getContent(),
+                'pseudo' => $post->getUser()?->getPseudo(),
+                'nbVote' => $post->getTotalReaction(),
+                'createdAt' => $post->getCreatedAt()?->format('Y-m-d H:i:s'),
+                'updatedAt' => $post->getUpdatedAt()?->format('Y-m-d H:i:s'),
+            ])
+            ->toArray();
+        return $this->json(
+            [
+                'thread' => [
+                    'createdAt' => $thread->getCreatedAt(),
+                    'updatedAt' => $thread->getUpdatedAt(),
+                    'nbVote' => $thread->getTotalReaction(),
+                    'pseudo' => $thread->getUser()->getPseudo(),
+                    'title' => $thread->getTitle(),
+                    'content' => $thread->getContent(),
+                    'nbPost' => $thread->getPosts()->count(),
+                    'communityName' => $thread->getCommunity()->getName(),
+                ],
+                'posts' => $data,
+            ],
+            Response::HTTP_OK,
+            [],
+            ['groups' => 'post']
+        );
     }
 }

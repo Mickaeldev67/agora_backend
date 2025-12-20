@@ -15,26 +15,26 @@ class Thread
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['thread', 'reaction'])]
+    #[Groups(['thread', 'reaction', 'post'])]
     private ?int $id = null;
 
-    #[Groups(['thread'])]
+    #[Groups(['thread', 'post'])]
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $title = null;
 
-    #[Groups(['thread'])]
+    #[Groups(['thread', 'post'])]
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $content = null;
 
-    #[Groups(['thread'])]
+    #[Groups(['thread', 'post'])]
     #[ORM\Column]
     private ?\DateTimeImmutable $created_at = null;
 
-    #[Groups(['thread'])]
+    #[Groups(['thread', 'post'])]
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     private ?\DateTime $updated_at = null;
 
-    #[Groups(['thread'])]
+    #[Groups(['thread', 'post'])]
     #[ORM\ManyToOne(inversedBy: 'threads')]
     #[ORM\JoinColumn(nullable: false)]
     private ?User $user = null;
@@ -49,7 +49,7 @@ class Thread
     /**
      * @var Collection<int, Reaction>
      */
-    #[Groups(['thread'])]
+    #[Groups(['thread', 'post'])]
     #[ORM\OneToMany(targetEntity: Reaction::class, mappedBy: 'thread')]
     private Collection $reactions;
 
