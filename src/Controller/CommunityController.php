@@ -94,17 +94,15 @@ final class CommunityController extends AbstractController
         $data = $threads->map(fn($thread) => [
             'id' => $thread->getId(),
             'title' => $thread->getTitle(),
-            'created_at' => $thread->getCreatedAt()?->format('Y-m-d H:i:s'),
+            'createdAt' => $thread->getCreatedAt(),
+            'updateAt' => $thread->getUpdatedAt(),
             'content' => $thread->getContent(),
             'user' => [
                 'id' => $thread->getUser()?->getId(),
                 'pseudo' => $thread->getUser()?->getPseudo(),
             ],
-            'Reactions' => [
-                'likes' => $thread->getReactions()->filter(fn($reaction) => $reaction->isLiked())->count(),
-                'dislikes' => $thread->getReactions()->filter(fn($reaction) => $reaction->isDisliked())->count(),
-                'total' => $thread->getTotalReaction(),
-            ],
+            'nbVote' =>  $thread->getTotalReaction(),
+            'nbPost' => $thread->getPosts()->count(),
         ])->toArray();
 
         return $this->json([
