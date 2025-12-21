@@ -6,10 +6,12 @@ use App\Entity\Thread;
 use App\Repository\CommunityRepository;
 use App\Repository\ThreadRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Exception;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 
@@ -185,14 +187,25 @@ final class ThreadController extends AbstractController
     }
 
     #[Route('/thread/{id}/posts', name: 'app_thread_posts', methods: ['GET'])]
-    public function getPosts(int $id, ThreadRepository $repo, SerializerInterface $serializer): JsonResponse
+    public function getPosts($id, ThreadRepository $repo): JsonResponse
     {
+        if (!ctype_digit((string)$id)) {
+            return new JsonResponse(
+                ['message' => "Thread non trouvé. L'id doit être un entier !"],
+                Response::HTTP_NOT_FOUND
+            );
+        }
         $thread = $repo->find($id);
         if (!$thread) {
-            return $this->json(
-                [
-                    'error' => 'Thread non trouvé.'
-                ],
+            return new JsonResponse(
+                ['message' => 'Thread non trouvé.'],
+                Response::HTTP_NOT_FOUND
+            );
+        }
+        
+        if (!$thread) {
+            return new JsonResponse(
+                ['message' => 'Thread non trouvé.'],
                 Response::HTTP_NOT_FOUND
             );
         }
