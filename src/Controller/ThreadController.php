@@ -174,7 +174,7 @@ final class ThreadController extends AbstractController
             'nbVote' => $thread->getTotalReaction(),
             'createdAt' => $thread->getCreatedAt(),
             'updatedAt' => $thread->getUpdatedAt(),
-            'community' => $thread->getCommunity()->getName(),
+            'community' => $thread->getCommunity(),
             'nbPost' => $thread->getPosts()->count() ?? 0,
         ], $threads);
 

@@ -7,6 +7,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ORM\Entity(repositoryClass: CommunityRepository::class)]
 class Community
@@ -14,11 +15,14 @@ class Community
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['thread', 'community'])]
     private ?int $id = null;
 
+    #[Groups(['thread', 'community'])]
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $name = null;
 
+    #[Groups(['community'])]
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $description = null;
 
@@ -27,6 +31,7 @@ class Community
      */
     #[ORM\ManyToMany(targetEntity: Topic::class, inversedBy: 'communities', cascade: ['persist', 'remove'])]
     #[ORM\JoinTable(name: 'community_topic')]
+    #[Groups(['community'])]
     private Collection $topics;
 
     /**

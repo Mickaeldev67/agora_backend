@@ -72,14 +72,20 @@ final class CommunityController extends AbstractController
         ]);
     }
 
-    #[Route('/api/community/{id}/threads', name: 'app_community_threads', methods: ['GET'])]
-    public function getThreads(int $id, CommunityRepository $repo): JsonResponse
+    #[Route('/community/{id}/threads', name: 'app_community_threads', methods: ['GET'])]
+    public function getThreads($id, CommunityRepository $repo): JsonResponse
     {
+        if (!ctype_digit((string)$id)) {
+            return new JsonResponse(
+                ['message' => "Communauté non trouvé. L'id doit être un entier !"],
+                Response::HTTP_NOT_FOUND
+            );
+        }
         $community = $repo->find($id);
 
         if (!$community) {
             return $this->json([
-                'error' => sprintf("Communauté avec l'ID %s introuvable", $id)
+                'message' => sprintf("Communauté avec l'ID %s introuvable", $id)
             ], Response::HTTP_NOT_FOUND);
         }
 
@@ -101,7 +107,10 @@ final class CommunityController extends AbstractController
             ],
         ])->toArray();
 
-        return $this->json($data);
+        return $this->json([
+            'community' => $community, 
+            'threads' => $data,
+        ], Response::HTTP_OK, [], ['groups' => 'community']);
     }
 
     #[Route('/api/community/{id}/add-favorite', name: 'app_community_add_favorite', methods: ['POST'])]

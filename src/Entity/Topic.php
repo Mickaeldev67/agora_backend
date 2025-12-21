@@ -14,11 +14,11 @@ class Topic
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['category'])]
+    #[Groups(['category', 'community'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(['category'])]
+    #[Groups(['category', 'community'])]
     private ?string $name = null;
 
     /**
