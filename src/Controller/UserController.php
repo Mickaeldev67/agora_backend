@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\User;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -28,17 +29,27 @@ final class UserController extends AbstractController
         $content = $request->getContent();
         $user = $serializer->deserialize($content, User::class, "json", []);
         $errors = $validator->validate($user);
+        $message = "";
         if (count($errors) > 0) {
-            return $this->json([
-                'errors' => (string) $errors
-            ], Response::HTTP_BAD_REQUEST);
+            foreach ($errors as $error) {
+                $message = $message . ' ' . $error->getMessage();
+            }
+            return new JsonResponse(
+                [
+                    'message' => $message,
+                ],
+                Response::HTTP_BAD_REQUEST
+            );
         }
 
         $password = $user->getPassword();
         if (!$password || strlen($password) < 7) {
-            return $this->json([
-                'errors' => 'Le mot de passe doit faire au moins 7 caractères.'
-            ], Response::HTTP_BAD_REQUEST);
+            return new JsonResponse(
+                [
+                    'message' => "Le mot de passe doit faire au moins 7 caractères.",
+                ],
+                Response::HTTP_BAD_REQUEST
+            );
         }
 
         $user->setRoles([User::ROLE_USER]);
@@ -49,8 +60,14 @@ final class UserController extends AbstractController
             )
         );
 
-        $em->persist($user);
-        $em->flush();
+        try {
+            $em->persist($user);
+            $em->flush();
+        } catch (UniqueConstraintViolationException $e) {
+            // Ici tu peux checker quel champ pose problème
+            $message = 'Un utilisateur avec cet email ou pseudo existe déjà.';
+            return new JsonResponse(['message' => $message], JsonResponse::HTTP_CONFLICT);
+        }
 
         return $this->json([
             'user' => $user,

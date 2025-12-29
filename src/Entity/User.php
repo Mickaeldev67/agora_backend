@@ -28,6 +28,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Assert\Email(
         message: "L'adresse email '{{ value }}' n'est pas valide."
     )]
+    #[Assert\NotBlank(
+        message: "L'email est obligatoire."
+    )]
     #[ORM\Column(length: 180)]
     private ?string $email = null;
 
@@ -78,6 +81,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[Groups(['thread', 'post'])]
     #[ORM\Column(length: 50)]
+    #[Assert\NotBlank(
+        message: 'Le pseudo ne doit pas être vide.'
+    )]
     private ?string $pseudo = null;
 
     /**
