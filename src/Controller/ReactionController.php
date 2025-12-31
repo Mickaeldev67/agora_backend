@@ -126,13 +126,30 @@ final class ReactionController extends AbstractController
         $em->flush();
 
         if (isset($reaction)) {
+            $nbVote = null;
+            if ($type == "post") {
+                $nbVote = $reaction->getPost()->getTotalReaction();
+            }
 
+            if ($type == "thread") {
+                $nbVote = $reaction->getThread()->getTotalReaction();
+            }
             return $this->json([
-                'message' => $reaction,
+                'reaction' => $reaction,
+                'nbVote' => $nbVote,
             ], Response::HTTP_CREATED, [], ['groups' => 'reaction']);
         } else {
+            $nbVote = null;
+            if ($type == "post") {
+                $nbVote = $existingReaction->getPost()->getTotalReaction();
+            }
+
+            if ($type == "thread") {
+                $nbVote = $existingReaction->getThread()->getTotalReaction();
+            }
             return $this->json([
-                'message' => $existingReaction,
+                'reaction' => $existingReaction,
+                'nbVote' => $nbVote,
             ], Response::HTTP_OK, [], ['groups' => 'reaction']);
         }
     }
@@ -158,6 +175,12 @@ final class ReactionController extends AbstractController
         $isDisliked = $data['isDisliked'];
         $post = null;
         $thread = null;
+
+        if ($type !== "post" && $type !== "thread") {
+            return $this->json([
+                'error' => 'Invalid type'
+            ], Response::HTTP_BAD_REQUEST); 
+        }
         if ($type == "post") {
             $post = $postRepository->find($id);
             if (!$post) {
@@ -174,12 +197,6 @@ final class ReactionController extends AbstractController
                     'error' => 'Thread not found'
                 ], Response::HTTP_BAD_REQUEST); 
             }
-        }
-
-        if ($type !== "post" && $type !== "thread") {
-            return $this->json([
-                'error' => 'Invalid type'
-            ], Response::HTTP_BAD_REQUEST); 
         }
 
         if (isset($isDisliked) && $isDisliked) {
@@ -236,15 +253,33 @@ final class ReactionController extends AbstractController
 
         $em->flush();
 
+        $nbVote = null;
         if (isset($reaction)) {
+            if ($type == "post") {
+                $nbVote = $reaction->getPost()->getTotalReaction();
+            }
 
+            if ($type == "thread") {
+                $nbVote = $reaction->getThread()->getTotalReaction();
+            }
+            
             return $this->json([
                 'reaction' => $reaction,
+                'nbVote' => $nbVote,
             ], Response::HTTP_CREATED, [], ['groups' => 'reaction']);
         } else {
+            $nbVote = null;
+            if ($type == "post") {
+                $nbVote = $existingReaction->getPost()->getTotalReaction();
+            }
+
+            if ($type == "thread") {
+                $nbVote = $existingReaction->getThread()->getTotalReaction();
+            }
             return $this->json([
-                'message' => 'Réaction modifié avec succès !',
-            ], Response::HTTP_OK);
+                'reaction' => $existingReaction,
+                'nbVote' => $nbVote,
+            ], Response::HTTP_OK, [], ['groups' => 'reaction']);
         }
     }
 }
