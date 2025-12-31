@@ -128,12 +128,12 @@ final class ReactionController extends AbstractController
         if (isset($reaction)) {
 
             return $this->json([
-                'reaction' => $reaction,
+                'message' => $reaction,
             ], Response::HTTP_CREATED, [], ['groups' => 'reaction']);
         } else {
             return $this->json([
-                'message' => 'Réaction modifié avec succès !',
-            ], Response::HTTP_OK);
+                'message' => $existingReaction,
+            ], Response::HTTP_OK, [], ['groups' => 'reaction']);
         }
     }
 

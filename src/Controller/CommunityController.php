@@ -111,8 +111,8 @@ final class CommunityController extends AbstractController
         ], Response::HTTP_OK, [], ['groups' => 'community']);
     }
 
-    #[Route('/api/community/{id}/add-favorite', name: 'app_community_add_favorite', methods: ['POST'])]
-    public function addfavoriteCommunity(Request $request, EntityManagerInterface $em, CommunityRepository $repo, int $id): JsonResponse
+    #[Route('/api/community/add-favorite', name: 'app_community_add_favorite', methods: ['POST'])]
+    public function addfavoriteCommunity(Request $request, EntityManagerInterface $em, CommunityRepository $repo): JsonResponse
     {
         // Implementation for adding a favorite community would go here.
         $request = json_decode($request->getContent(), true);

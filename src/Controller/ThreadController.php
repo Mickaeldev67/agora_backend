@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Thread;
 use App\Repository\CommunityRepository;
 use App\Repository\ThreadRepository;
+use App\Service\ReactionService;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -154,11 +155,13 @@ final class ThreadController extends AbstractController
     }
 
 
-    #[Route('/thread/best-reacted', name: 'app_thread_best_reacted', methods: ['GET'])]
-    public function getBestReactedThreads(ThreadRepository $repo): JsonResponse
+    #[Route('/api/thread/best-reacted', name: 'app_thread_best_reacted', methods: ['GET'])]
+    public function getBestReactedThreads(ThreadRepository $repo, ReactionService $reactionService): JsonResponse
     {
         // Fetch all threads and sort them by total reactions (DESC)
         $threads = $repo->findAll();
+
+        $user = $this->getUser();
 
         // Sort threads by total reactions in descending order
         usort($threads, function (Thread $a, Thread $b) {
@@ -179,6 +182,7 @@ final class ThreadController extends AbstractController
             'updatedAt' => $thread->getUpdatedAt(),
             'community' => $thread->getCommunity(),
             'nbPost' => $thread->getPosts()->count() ?? 0,
+            'reaction' => $reactionService->getUserReactionForThread($user, $thread)
         ], $threads);
 
         return $this->json(
