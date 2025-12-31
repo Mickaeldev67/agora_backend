@@ -107,20 +107,10 @@ final class ReactionController extends AbstractController
                 if ($existingReaction->isLiked() === false) {
                     $em->remove($existingReaction);
                 } else {
-                    $existingReaction->setIsDisliked(true);
                     $existingReaction->setIsLiked(false);
                     $em->persist($existingReaction);
-                    
                 }
-            } else {
-                $reaction = new Reaction();
-                $reaction->setIsLiked(false);
-                $reaction->setIsDisliked(true);
-                $reaction->setUser($user);
-                $reaction->setPost($post);
-                $reaction->setThread($thread);
-                $em->persist($reaction);
-            }
+            } 
         } 
 
         $em->flush();
@@ -232,23 +222,9 @@ final class ReactionController extends AbstractController
             ]);
             if ($existingReaction)
             {
-                if ($existingReaction->isDisliked() === false) {
-                    $em->remove($existingReaction);
-                } else {
-                    $existingReaction->setIsDisliked(false);
-                    $existingReaction->setIsLiked(true);
-                    $em->persist($existingReaction);
-                    
-                }
-            } else {
-                $reaction = new Reaction();
-                $reaction->setIsLiked(true);
-                $reaction->setIsDisliked(false);
-                $reaction->setUser($user);
-                $reaction->setPost($post);
-                $reaction->setThread($thread);
-                $em->persist($reaction);
-            }
+                $existingReaction->setIsDisliked(false);
+                $em->persist($existingReaction);
+            } 
         } 
 
         $em->flush();
