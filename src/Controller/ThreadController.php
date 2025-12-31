@@ -193,9 +193,10 @@ final class ThreadController extends AbstractController
         );
     }
 
-    #[Route('/thread/{id}/posts', name: 'app_thread_posts', methods: ['GET'])]
-    public function getPosts($id, ThreadRepository $repo): JsonResponse
+    #[Route('/api/thread/{id}/posts', name: 'app_thread_posts', methods: ['GET'])]
+    public function getPosts($id, ThreadRepository $repo, ReactionService $reactionService): JsonResponse
     {
+        $user = $this->getUser();
         if (!ctype_digit((string)$id)) {
             return new JsonResponse(
                 ['message' => "Thread non trouvé. L'id doit être un entier !"],
@@ -225,11 +226,13 @@ final class ThreadController extends AbstractController
                 'nbVote' => $post->getTotalReaction(),
                 'createdAt' => $post->getCreatedAt()?->format('Y-m-d H:i:s'),
                 'updatedAt' => $post->getUpdatedAt()?->format('Y-m-d H:i:s'),
+                'reaction' => $reactionService->getUserReactionForPost($user, $post),
             ])
             ->toArray();
         return $this->json(
             [
                 'thread' => [
+                    'id' => $thread->getId(),
                     'createdAt' => $thread->getCreatedAt(),
                     'updatedAt' => $thread->getUpdatedAt(),
                     'nbVote' => $thread->getTotalReaction(),
@@ -244,6 +247,7 @@ final class ThreadController extends AbstractController
                         'id' => $thread->getCommunity()->getId(),
                         'name' => $thread->getCommunity()->getName(),
                     ],
+                    'reaction' => $reactionService->getUserReactionForThread($user, $thread),
                 ],
                 'posts' => $data,
             ],

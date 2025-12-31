@@ -44,5 +44,6 @@ security:
         - { path: ^/api/login, roles: PUBLIC_ACCESS }
         - { path: ^/api/register, roles: PUBLIC_ACCESS }
         - { path: ^/api/thread/best-reacted, roles: PUBLIC_ACCESS }
+        - { path: ^/api/thread/\d+/posts, roles: PUBLIC_ACCESS }
         - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
 
