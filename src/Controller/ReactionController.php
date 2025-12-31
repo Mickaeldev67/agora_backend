@@ -125,7 +125,10 @@ final class ReactionController extends AbstractController
                 $nbVote = $reaction->getThread()->getTotalReaction();
             }
             return $this->json([
-                'reaction' => $reaction,
+                'reaction' => [
+                    'isLiked' => $reaction->isLiked() ?? false,
+                    'isDisliked' => $reaction->isDisliked() ?? false,
+                ],
                 'nbVote' => $nbVote,
             ], Response::HTTP_CREATED, [], ['groups' => 'reaction']);
         } else {
@@ -138,7 +141,10 @@ final class ReactionController extends AbstractController
                 $nbVote = $existingReaction->getThread()->getTotalReaction();
             }
             return $this->json([
-                'reaction' => $existingReaction,
+                'reaction' => [
+                    'isLiked' => $existingReaction->isLiked() ?? false,
+                    'isDisliked' => $existingReaction->isDisliked() ?? false,
+                ],
                 'nbVote' => $nbVote,
             ], Response::HTTP_OK, [], ['groups' => 'reaction']);
         }
@@ -240,7 +246,10 @@ final class ReactionController extends AbstractController
             }
             
             return $this->json([
-                'reaction' => $reaction,
+                'reaction' => [
+                    'isLiked' => $reaction->isLiked() ?? false,
+                    'isDisliked' => $reaction->isDisliked() ?? false,
+                ],
                 'nbVote' => $nbVote,
             ], Response::HTTP_CREATED, [], ['groups' => 'reaction']);
         } else {
@@ -253,7 +262,10 @@ final class ReactionController extends AbstractController
                 $nbVote = $existingReaction->getThread()->getTotalReaction();
             }
             return $this->json([
-                'reaction' => $existingReaction,
+                'reaction' => [
+                    'isLiked' => $existingReaction->isLiked() ?? false,
+                    'isDisliked' => $existingReaction->isDisliked() ?? false,
+                ],
                 'nbVote' => $nbVote,
             ], Response::HTTP_OK, [], ['groups' => 'reaction']);
         }
