@@ -21,6 +21,7 @@ final class ThreadController extends AbstractController
     #[Route('/api/thread/create', name: 'app_thread_create', methods: ['POST'])]
     public function create(EntityManagerInterface $em, Request $request, CommunityRepository $repo): JsonResponse
     {
+        
         $data = json_decode($request->getContent(), true);
         $thread = new Thread();
         $thread->setTitle($data['title'] ?? null);
@@ -28,6 +29,7 @@ final class ThreadController extends AbstractController
         $currentDate = new \DateTimeImmutable();
         $thread->setCreatedAt($currentDate);
         $user = $this->getUser();
+        
         if (!$user) {
             return $this->json(
                 [
@@ -38,7 +40,7 @@ final class ThreadController extends AbstractController
         }
         $thread->setUser($user);
         try {
-            $community = $repo->find($data['community_id'] ?? null);
+            $community = $repo->find($data['community_id']) ?? null;
             if (!$community) {
                 return $this->json(
                     [
@@ -48,20 +50,34 @@ final class ThreadController extends AbstractController
                 );
             }
             $thread->setCommunity($community);
+            
         } catch (\Exception $e) {
-            return $this->json(
-                [
-                    'error' => 'Une erreur est survenu : ' . $e->getMessage()
-                ],
-                Response::HTTP_INTERNAL_SERVER_ERROR
+            return new JsonResponse(
+                ['message' => 'Une erreur avec la communauté est survenu : ' . $e->getMessage()],
+                Response::HTTP_INTERNAL_SERVER_ERROR,
             );
         }
+        
         $em->persist($thread);
         $em->flush();
-        return $this->json([
+        return new JsonResponse([
             'message' => 'Thread créé avec succès !',
-            'thread' => $thread,
-        ], Response::HTTP_CREATED, [], ['groups' => 'thread']);
+            'thread' => [
+                'id' => $thread->getId(),
+                'title' => $thread->getTitle(),
+                'content' => $thread->getContent(),
+                'created_at' => $thread->getCreatedAt()->format('Y-m-d H:i:s'),
+                'user' => [
+                    'pseudo' => $thread->getUser()->getPseudo(),
+                ],
+                'community' => [
+                    'id' => $thread->getCommunity()->getId(),
+                    'name' => $thread->getCommunity()->getName(),
+                ],
+                'posts' => [],
+                'reactions' => [],
+            ],
+        ], Response::HTTP_CREATED);
     }
 
     #[Route('/api/thread/update', name: 'app_thread_update', methods: ['PUT'])]
@@ -210,7 +226,7 @@ final class ThreadController extends AbstractController
                 Response::HTTP_NOT_FOUND
             );
         }
-        
+
         if (!$thread) {
             return new JsonResponse(
                 ['message' => 'Thread non trouvé.'],
