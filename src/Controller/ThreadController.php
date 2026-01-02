@@ -69,6 +69,7 @@ final class ThreadController extends AbstractController
                 'created_at' => $thread->getCreatedAt()->format('Y-m-d H:i:s'),
                 'user' => [
                     'pseudo' => $thread->getUser()->getPseudo(),
+                    'isOwner' => $thread->getUser()->getId() === $this->getUser()?->getId()
                 ],
                 'community' => [
                     'id' => $thread->getCommunity()->getId(),
@@ -127,8 +128,8 @@ final class ThreadController extends AbstractController
 
         // Implementation for updating a thread would go here.
         return $this->json([
-            'message' => 'Mise à jour du thread réussie !',
-        ]);
+            'thread' => $thread,
+        ], Response::HTTP_OK, [], ['groups' => 'thread']);
     }
 
     #[Route('/api/thread/delete/{id}', name: 'app_thread_delete', methods: ['DELETE'])]
@@ -192,6 +193,8 @@ final class ThreadController extends AbstractController
             'user' => [
                 'id' => $thread->getUser()?->getId(),
                 'pseudo' => $thread->getUser()?->getPseudo(),
+                'isOwner' => $thread->getUser()->getId() === $this->getUser()?->getId(),
+                'isAdmin' => $this->getUser()?->isAdmin(),
             ],
             'nbVote' => $thread->getTotalReaction(),
             'createdAt' => $thread->getCreatedAt(),
@@ -255,6 +258,7 @@ final class ThreadController extends AbstractController
                     'user' => [
                         'id' => $thread->getUser()?->getId(),
                         'pseudo' => $thread->getUser()?->getPseudo(),
+                        'isOwner' => $thread->getUser()->getId() === $this->getUser()?->getId()
                     ],
                     'title' => $thread->getTitle(),
                     'content' => $thread->getContent(),

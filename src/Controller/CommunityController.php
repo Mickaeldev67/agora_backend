@@ -72,7 +72,7 @@ final class CommunityController extends AbstractController
         ]);
     }
 
-    #[Route('/community/{id}/threads', name: 'app_community_threads', methods: ['GET'])]
+    #[Route('api/community/{id}/threads', name: 'app_community_threads', methods: ['GET'])]
     public function getThreads($id, CommunityRepository $repo): JsonResponse
     {
         if (!ctype_digit((string)$id)) {
@@ -100,6 +100,8 @@ final class CommunityController extends AbstractController
             'user' => [
                 'id' => $thread->getUser()?->getId(),
                 'pseudo' => $thread->getUser()?->getPseudo(),
+                'isOwner' => $thread->getUser()->getId() === $this->getUser()?->getId(),
+                'isAdmin' => $this->getUser()?->isAdmin(),
             ],
             'nbVote' =>  $thread->getTotalReaction(),
             'nbPost' => $thread->getPosts()->count(),
