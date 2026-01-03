@@ -226,7 +226,6 @@ final class CommunityController extends AbstractController
                 ['message' => "Vous n'êtes pas administrateur !"],
                 Response::HTTP_FORBIDDEN
             );
-
         }
 
         $data = json_decode($request->getContent(), true);
@@ -274,5 +273,41 @@ final class CommunityController extends AbstractController
             ], $community->getTopics()->toArray()),
             'message' => 'Community updated successfully'
         ]);
+    }
+
+    #[Route('/api/community/{id}/delete', name: 'app_community_delete', methods: ['DELETE'])]
+    public function delete(
+        int $id,
+        EntityManagerInterface $em,
+        CommunityRepository $repo
+    ): JsonResponse {
+        $user = $this->getUser();
+
+        if (!$user) {
+            return new JsonResponse(
+                ['message' => "Action non autorisé."],
+                Response::HTTP_UNAUTHORIZED
+            );
+        }
+
+        $community = $repo->find($id);
+        if (!$community) {
+            return new JsonResponse(
+                ['message' => "Communauté non trouvée."],
+                Response::HTTP_NOT_FOUND
+            );
+        }
+
+        if (!$user->isAdmin()) {
+            return new JsonResponse(
+                ['message' => "Vous n\'êtes pas autorisé à supprimer cette communauté"],
+                Response::HTTP_FORBIDDEN
+            );
+        }
+
+        $em->remove($community);
+        $em->flush();
+
+        return $this->json(['message' => 'Communauté supprimée avec succès'], Response::HTTP_OK);
     }
 }
