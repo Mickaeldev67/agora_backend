@@ -37,13 +37,11 @@ final class CommunityController extends AbstractController
         $community->setDescription($description);
         try {
             foreach ($topics as $topicId) {
-                
+
                 $topic = $repo->find($topicId);
                 if (!$topic) {
-                    return $this->json(
-                        [
-                            'error' => "Topic with ID $topicId not found"
-                        ],
+                    return new JsonResponse(
+                        ['message' => "l'id topic $topicId n'a pas été trouvé"],
                         Response::HTTP_BAD_REQUEST
                     );
                 }
@@ -52,14 +50,12 @@ final class CommunityController extends AbstractController
 
             // Here you would create the Community entity, set its properties,
             // associate the topics, persist it and flush.
-            
+
             $em->persist($community);
             $em->flush();
         } catch (\Exception $e) {
-            return $this->json(
-                [
-                    'error' => 'An error occurred: ' . $e->getMessage()
-                ],
+            return new JsonResponse(
+                ['message' => "Erreur : " . $e->getMessage()],
                 Response::HTTP_INTERNAL_SERVER_ERROR
             );
         }
@@ -108,10 +104,21 @@ final class CommunityController extends AbstractController
             'nbPost' => $thread->getPosts()->count(),
         ])->toArray();
 
+        $communityToSend = [
+            'id' => $community->getId(),
+            'name' => $community->getName(),
+            'description' => $community->getDescription(),
+            'topics' => array_map(fn($topic) => [
+                'id' => $topic->getId(),
+                'name' => $topic->getName()
+            ], $community->getTopics()->toArray()),
+            'isAdmin' => $this->getUser()?->isAdmin(),
+        ];
+
         return $this->json([
-            'community' => $community, 
+            'community' => $communityToSend,
             'threads' => $data,
-        ], Response::HTTP_OK, [], ['groups' => 'community']);
+        ], Response::HTTP_OK);
     }
 
     #[Route('/api/community/add-favorite', name: 'app_community_add_favorite', methods: ['POST'])]
@@ -186,6 +193,86 @@ final class CommunityController extends AbstractController
 
         return $this->json([
             'message' => 'La communauté a été supprimée des favoris avec succès.',
+        ]);
+    }
+
+    #[Route('/api/community/{id}/edit', name: 'app_community_edit', methods: ['PUT'])]
+    public function editCommunity(
+        int $id,
+        Request $request,
+        EntityManagerInterface $em,
+        CommunityRepository $communityRepo,
+        TopicRepository $topicRepo
+    ): JsonResponse {
+        $user = $this->getUser();
+        if (!$user) {
+            return new JsonResponse(
+                ['message' => "Non authorisé"],
+                Response::HTTP_UNAUTHORIZED
+            );
+        }
+
+        $community = $communityRepo->find($id);
+        if (!$community) {
+            return new JsonResponse(
+                ['message' => "Communauté non trouvé"],
+                Response::HTTP_NOT_FOUND
+            );
+        }
+
+        // Vérifie si l'utilisateur est propriétaire ou admin
+        if (!$user->isAdmin()) {
+            return new JsonResponse(
+                ['message' => "Vous n'êtes pas administrateur !"],
+                Response::HTTP_FORBIDDEN
+            );
+
+        }
+
+        $data = json_decode($request->getContent(), true);
+        $name = $data['name'] ?? null;
+        $description = $data['description'] ?? null;
+        $topicsIds = $data['topics'] ?? [];
+
+        if (!$name || !$description || empty($topicsIds)) {
+            return new JsonResponse(
+                ['message' => "Tous les champs sont requis."],
+                Response::HTTP_BAD_REQUEST
+            );
+        }
+
+        $community->setName($name);
+        $community->setDescription($description);
+
+        // Réinitialise les topics
+        foreach ($community->getTopics() as $topic) {
+            $community->removeTopic($topic);
+        }
+
+        // Ajoute les topics sélectionnés
+        foreach ($topicsIds as $topicId) {
+            $topic = $topicRepo->find($topicId);
+            if (!$topic) {
+                return new JsonResponse(
+                    ['message' => "Topic $topicId non trouvé."],
+                    Response::HTTP_BAD_REQUEST
+                );
+            }
+            $community->addTopic($topic);
+        }
+
+        $em->persist($community);
+        $em->flush();
+
+        return $this->json([
+            'id' => $community->getId(),
+            'name' => $community->getName(),
+            'description' => $community->getDescription(),
+            'topics' => array_map(fn($topic) => [
+                'id' => $topic->getId(),
+                'name' => $topic->getName()
+            ], $community->getTopics()->toArray()),
+            'message' => 'Community updated successfully'
         ]);
     }
 }
