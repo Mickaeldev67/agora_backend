@@ -35,4 +35,11 @@ final class CategoryController extends AbstractController
             ),
         ], Response::HTTP_CREATED);
     }
+
+    #[Route('/api/category/display', name: 'app_category_display', methods: ['GET'])]
+    public function display(CategoryRepository $repo): JsonResponse
+    {
+        $categories = $repo->findAll();
+        return $this->json($categories, Response::HTTP_OK, [], ['groups' => 'category']);
+    }
 }

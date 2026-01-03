@@ -14,11 +14,11 @@ class Topic
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['category', 'community'])]
+    #[Groups(['category', 'community', 'topic'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(['category', 'community'])]
+    #[Groups(['category', 'community', 'topic'])]
     private ?string $name = null;
 
     /**
@@ -29,6 +29,7 @@ class Topic
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['topic'])]
     private ?Category $category = null;
 
     public function __construct()

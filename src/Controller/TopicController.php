@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Topic;
 use App\Repository\CategoryRepository;
+use App\Repository\TopicRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -23,7 +24,7 @@ final class TopicController extends AbstractController
         ]);
     }
 
-    #[Route('api/topic/create', name: 'app_topic_create', methods: ['POST'])]
+    #[Route('/api/topic/create', name: 'app_topic_create', methods: ['POST'])]
     public function create(Request $request, EntityManagerInterface $em, CategoryRepository $repo): JsonResponse
     {
         // 1. On décode en tableau
@@ -55,5 +56,17 @@ final class TopicController extends AbstractController
                 $category->getName()
             )
         ], Response::HTTP_CREATED);
+    }
+
+    #[Route('/api/topic/display', name: 'app_topic_display', methods: ['GET'])]
+    function display(TopicRepository $repo):JsonResponse {
+        $topics = $repo->findAll();
+        if (!$topics) {
+            return new JsonResponse(
+                ['message' => "Un problème a eu lieu dans la récupération des topics"],
+                Response::HTTP_NO_CONTENT
+            );
+        }
+        return $this->json($topics, Response::HTTP_OK, [], ['groups' => 'topic']);
     }
 }

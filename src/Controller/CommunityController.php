@@ -65,11 +65,12 @@ final class CommunityController extends AbstractController
         }
 
         return $this->json([
+            'id' => $community->getId(),
             'message' => sprintf(
                 'La communauté %s a bien été créée.',
                 $name
             ),
-        ]);
+        ], Response::HTTP_CREATED);
     }
 
     #[Route('api/community/{id}/threads', name: 'app_community_threads', methods: ['GET'])]
