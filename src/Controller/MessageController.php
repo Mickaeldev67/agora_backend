@@ -61,12 +61,6 @@ final class MessageController extends AbstractController
         ], Response::HTTP_OK);
     }
 
-    #[Route('/api/message/inbox', name: 'app_message_inbox', methods: ['GET'])]
-    public function getMessages()
-    {
-        
-    }
-
     #[Route('/api/message/pseudos', name: 'app_message_pseudos', methods: ['GET'])]
     public function getPseudos(
         \App\Repository\MessageRepository $messageRepo
@@ -103,12 +97,10 @@ final class MessageController extends AbstractController
                 ];
             }, $rows);
 
-            return $this->json([
-                'pseudos' => $pseudos,
-            ], Response::HTTP_OK);
+            return $this->json($pseudos, Response::HTTP_OK);
     }
 
-    #[Route('/api/message/conversation/{id}', name: 'app_message_conversation', methods: ['GET'])]
+    #[Route('/api/message/{id}', name: 'app_message_conversation', methods: ['GET'])]
     public function getMessagesWithUser(
         MessageRepository $repo,
         int $id,
@@ -164,9 +156,7 @@ final class MessageController extends AbstractController
             ];
         }, $messages);
 
-        return $this->json([
-            'messages' => $data,
-        ], Response::HTTP_OK);
+        return $this->json($data, Response::HTTP_OK);
     }
 
 }
