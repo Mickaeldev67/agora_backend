@@ -104,4 +104,19 @@ final class UserController extends AbstractController
 
         return $this->json($data, Response::HTTP_OK);
     }
+
+    #[Route('/api/user/me', name: 'api_user_me', methods: ['GET'])]
+    public function me(): JsonResponse
+    {
+        $user = $this->getUser();
+        if (!$user) {
+            return $this->json(['error' => 'Unauthorized'], 401);
+        }
+
+        return $this->json([
+            'id' => $user->getId(),
+            'pseudo' => $user->getPseudo(),
+            'email' => $user->getEmail(),
+        ]);
+    }
 }

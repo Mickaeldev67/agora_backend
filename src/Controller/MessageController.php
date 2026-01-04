@@ -11,6 +11,8 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Mercure\HubInterface;
+use Symfony\Component\Mercure\Update;
 
 final class MessageController extends AbstractController
 {
@@ -24,7 +26,7 @@ final class MessageController extends AbstractController
     }
 
     #[Route('/api/message/send/{id}', name: 'app_message_send', methods: ['POST'])]
-    public function sendMessage(Request $request, EntityManagerInterface $em, int $id, UserRepository $repo): JsonResponse
+    public function sendMessage(Request $request, EntityManagerInterface $em, int $id, UserRepository $repo, HubInterface $hub): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
         $content = $data['content'] ?? null;
@@ -56,16 +58,47 @@ final class MessageController extends AbstractController
         $em->persist($message);
         $em->flush();
 
+        $update = new Update(
+            // topic : chaque conversation peut avoir un topic unique, ici par exemple "conversation-1-2"
+            sprintf('conversation-%d-%d', min($issuer->getId(), $recipient->getId()), max($issuer->getId(), $recipient->getId())),
+            json_encode([
+                'id' => $message->getId(),
+                'content' => $message->getContent(),
+                'issuer' => [
+                    'id' => $issuer->getId(),
+                    'pseudo' => $issuer->getPseudo(),
+                ],
+                'recipient' => [
+                    'id' => $recipient->getId(),
+                    'pseudo' => $recipient->getPseudo(),
+                ],
+                'is_view' => $message->isView(),
+                'created_at' => $message->getCreatedAt()->format('Y-m-d H:i:s'),
+            ])
+        );
+
+        $hub->publish($update);
+
         return $this->json([
-            'message' => 'Message bien envoyé !',
+            'id' => $message->getId(),
+            'content' => $message->getContent(),
+            'issuer' => [
+                'id' => $issuer->getId(),
+                'pseudo' => $issuer->getPseudo(),
+            ],
+            'recipient' => [
+                'id' => $recipient->getId(),
+                'pseudo' => $recipient->getPseudo(),
+            ],
+            'is_view' => $message->isView(),
+            'created_at' => $message->getCreatedAt()->format('Y-m-d H:i:s'),
         ], Response::HTTP_OK);
     }
 
     #[Route('/api/message/pseudos', name: 'app_message_pseudos', methods: ['GET'])]
     public function getPseudos(
         \App\Repository\MessageRepository $messageRepo
-    ): JsonResponse
-    {
+    ): JsonResponse {
         $issuer = $this->getUser();
         if (!$issuer) {
             return $this->json([
@@ -73,31 +106,31 @@ final class MessageController extends AbstractController
             ], Response::HTTP_UNAUTHORIZED);
         }
 
-            // Query messages involving the user and compute the last message date per correspondent
-            $qb = $messageRepo->createQueryBuilder('m')
-                ->select(
-                    "CASE WHEN m.issuer = :user THEN IDENTITY(m.recipient) ELSE IDENTITY(m.issuer) END AS userId",
-                    "CASE WHEN m.issuer = :user THEN recipient.pseudo ELSE sender.pseudo END AS pseudo",
-                    'MAX(m.created_at) AS lastAt'
-                )
-                ->leftJoin('m.issuer', 'sender')
-                ->leftJoin('m.recipient', 'recipient')
-                ->where('m.issuer = :user OR m.recipient = :user')
-                ->setParameter('user', $issuer)
-                ->groupBy('userId', 'pseudo')
-                ->orderBy('lastAt', 'DESC');
+        // Query messages involving the user and compute the last message date per correspondent
+        $qb = $messageRepo->createQueryBuilder('m')
+            ->select(
+                "CASE WHEN m.issuer = :user THEN IDENTITY(m.recipient) ELSE IDENTITY(m.issuer) END AS userId",
+                "CASE WHEN m.issuer = :user THEN recipient.pseudo ELSE sender.pseudo END AS pseudo",
+                'MAX(m.created_at) AS lastAt'
+            )
+            ->leftJoin('m.issuer', 'sender')
+            ->leftJoin('m.recipient', 'recipient')
+            ->where('m.issuer = :user OR m.recipient = :user')
+            ->setParameter('user', $issuer)
+            ->groupBy('userId', 'pseudo')
+            ->orderBy('lastAt', 'DESC');
 
-            $rows = $qb->getQuery()->getArrayResult();
+        $rows = $qb->getQuery()->getArrayResult();
 
-            $pseudos = array_map(function ($row) {
+        $pseudos = array_map(function ($row) {
 
-                return [
-                    'id' => (int) $row['userId'],
-                    'pseudo' => $row['pseudo']
-                ];
-            }, $rows);
+            return [
+                'id' => (int) $row['userId'],
+                'pseudo' => $row['pseudo']
+            ];
+        }, $rows);
 
-            return $this->json($pseudos, Response::HTTP_OK);
+        return $this->json($pseudos, Response::HTTP_OK);
     }
 
     #[Route('/api/message/{id}', name: 'app_message_conversation', methods: ['GET'])]
@@ -105,8 +138,7 @@ final class MessageController extends AbstractController
         MessageRepository $repo,
         int $id,
         EntityManagerInterface $em
-    ): JsonResponse
-    {
+    ): JsonResponse {
         $issuer = $this->getUser();
         if (!$issuer) {
             return $this->json([
@@ -158,5 +190,4 @@ final class MessageController extends AbstractController
 
         return $this->json($data, Response::HTTP_OK);
     }
-
 }
