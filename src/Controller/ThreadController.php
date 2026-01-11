@@ -242,6 +242,12 @@ final class ThreadController extends AbstractController
                 'id' => $post->getId(),
                 'content' => $post->getContent(),
                 'pseudo' => $post->getUser()?->getPseudo(),
+                'user' => [
+                    'id' => $post->getUser()?->getId(),
+                    'pseudo' => $post->getUser()?->getPseudo(),
+                    'isOwner' => $user && $post->getUser()?->getId() === $user->getId(),
+                    'isAdmin' => $user?->isAdmin(),
+                ],
                 'nbVote' => $post->getTotalReaction(),
                 'createdAt' => $post->getCreatedAt()?->format('Y-m-d H:i:s'),
                 'updatedAt' => $post->getUpdatedAt()?->format('Y-m-d H:i:s'),
@@ -258,7 +264,8 @@ final class ThreadController extends AbstractController
                     'user' => [
                         'id' => $thread->getUser()?->getId(),
                         'pseudo' => $thread->getUser()?->getPseudo(),
-                        'isOwner' => $thread->getUser()->getId() === $this->getUser()?->getId()
+                        'isOwner' => $thread->getUser()->getId() === $this->getUser()?->getId(),
+                        'isAdmin' => $this->getUser()?->isAdmin(),
                     ],
                     'title' => $thread->getTitle(),
                     'content' => $thread->getContent(),

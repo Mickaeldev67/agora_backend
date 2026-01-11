@@ -3,14 +3,16 @@
 namespace App\Controller;
 
 use App\Entity\Post;
- use App\Repository\ThreadRepository;
- use App\Repository\PostRepository;
+use App\Repository\ThreadRepository;
+use App\Repository\PostRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Mercure\HubInterface;
+use Symfony\Component\Mercure\Update;
 
 final class PostController extends AbstractController
 {
@@ -23,7 +25,7 @@ final class PostController extends AbstractController
         ]);
     }
     #[Route('/api/post/create', name: 'app_post_create', methods: ['POST'])]
-    public function create(Request $request, EntityManagerInterface $em, ThreadRepository $repo): JsonResponse
+    public function create(Request $request, EntityManagerInterface $em, ThreadRepository $repo, HubInterface $hub): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
         $content = $data['content'] ?? null;
@@ -59,12 +61,38 @@ final class PostController extends AbstractController
         $em->persist($post);
         $em->flush();
 
+        $update = new Update(
+            sprintf('thread-%d', $thread->getId()),
+            json_encode([
+                'id' => $post->getId(),
+                'content' => $post->getContent(),
+                'createdAt' => $post->getCreatedAt()->format('Y-m-d H:i:s'),
+                'user' => [
+                    'id' => $user->getId(),
+                    'pseudo' => $user->getPseudo(),
+                ],
+                'pseudo' => $user->getPseudo(),
+                'nbVote' => 0,
+                'reaction' => null,
+
+            ])
+        );
+
+        $hub->publish($update);
+
         // Implementation for creating a post would go here.
-        return $this->json(
-            [
-                'message' => 'Le poste à été créé avec succès.',
-                'post' => $post,
-            ], Response::HTTP_CREATED, [], ['groups' => 'post']);
+        return $this->json([
+            'id' => $post->getId(),
+            'content' => $post->getContent(),
+            'createdAt' => $post->getCreatedAt()->format('Y-m-d H:i:s'),
+            'user' => [
+                'id' => $user->getId(),
+                'pseudo' => $user->getPseudo(),
+            ],
+            'pseudo' => $user->getPseudo(),
+            'nbVote' => 0,
+            'reaction' => null,
+        ]);
     }
 
     #[Route('/api/post/update', name: 'app_post_update', methods: ['PUT'])]
@@ -113,14 +141,16 @@ final class PostController extends AbstractController
             [
                 'message' => 'Le poste a été mis à jour avec succès.',
                 'post' => $post,
-            ], Response::HTTP_OK, [], ['groups' => 'post']);
+            ],
+            Response::HTTP_OK,
+            [],
+            ['groups' => 'post']
+        );
     }
 
-    #[Route('/api/post/delete', name: 'app_post_delete', methods: ['DELETE'])]
-    public function delete(Request $request, EntityManagerInterface $em, PostRepository $repo) 
+    #[Route('/api/post/delete/{id}', name: 'app_post_delete', methods: ['DELETE'])]
+    public function delete(Request $request, EntityManagerInterface $em, PostRepository $repo, int $id)
     {
-        $data = json_decode($request->getContent(), true);
-        $id = $data['id'] ?? null;
         $user = $this->getUser();
         if (!$user) {
             return $this->json(
@@ -158,6 +188,10 @@ final class PostController extends AbstractController
         return $this->json(
             [
                 'message' => 'Le poste a été supprimer avec succès !',
-            ], Response::HTTP_OK, [], ['groups' => 'post']);
+            ],
+            Response::HTTP_OK,
+            [],
+            ['groups' => 'post']
+        );
     }
 }

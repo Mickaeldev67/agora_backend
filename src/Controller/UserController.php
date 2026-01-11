@@ -117,6 +117,7 @@ final class UserController extends AbstractController
             'id' => $user->getId(),
             'pseudo' => $user->getPseudo(),
             'email' => $user->getEmail(),
+            'isAdmin' => $user?->isAdmin(),
         ]);
     }
 }
