@@ -3,6 +3,9 @@ php bin/phpunit
 
 ### lancer mercure 
 1. Se placer dans le dossier de mercure 
-2. Tapez : ```` 
-.\mercure.exe run -c .\Caddyfile`
-````
+2. Tapez :
+.\mercure.exe run -c .\Caddyfile
+
+### Lancer le server symfony
+Symfony serve
+PostMan : Message send id (id: 14)
