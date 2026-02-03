@@ -68,3 +68,7 @@
 /config/jwt/*.pem
 ###< lexik/jwt-authentication-bundle ###
 /mercure/*
+###> phpunit/phpunit ###
+/phpunit.xml
+/.phpunit.cache/
+###< phpunit/phpunit ###
